@@ -17,6 +17,16 @@ export class RoomsController {
         }
     }
 
+    @Get('/:roomId')
+    async getRoom(@Res() res, @Req() req, @Param('roomId') roomId){
+        try{
+            const room = await this.RoomService.findRoom(roomId);
+            res.json(room);
+        }catch(e){
+            console.log(e);
+        }
+    }
+
     @Post('')
     async addRoom(@Res() res, @Req() req, @Body() data){
         try{
@@ -31,13 +41,19 @@ export class RoomsController {
     @Patch('/:roomId/edit')
     async updateRoom(@Res() res, @Req() req, @Param('roomId') roomId, @Body() data){
         try{
-            const { name } = data;
+            const { name, username } = data;
 
             const room = await this.RoomService.findOne({_id: roomId});
 
             if (!room) throw new NotFoundException({
                 statusCode: 404,
                 error: "A room with this id not found."
+            });
+
+            
+            if (!room.owner == username) throw new NotFoundException({
+                statusCode: 404,
+                error: "You are not owner of this room."
             });
 
             const updatedRoom = await this.RoomService.updateRoom(roomId, name);

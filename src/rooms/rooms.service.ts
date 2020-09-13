@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { RoomModel } from './models/room.model';
+import { ICreateRoom } from './interfaces/room.interface';
 
 @Injectable()
 export class RoomsService {
@@ -9,6 +10,10 @@ export class RoomsService {
 
     async findAll(): Promise<RoomModel[]> {
         return this.RoomModel.find().lean();
+    }
+
+    async findRoom(roomId): Promise<RoomModel> {
+        return this.RoomModel.find({_id: roomId}).lean();
     }
 
     async addRoom(data): Promise<RoomModel> {
