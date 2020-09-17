@@ -1,4 +1,5 @@
 import { Controller, Get, Res, Req, Post, Body, Patch, Delete, Param, NotFoundException } from '@nestjs/common';
+
 import { RoomsService } from './rooms.service';
 
 @Controller('api/v1/rooms')
