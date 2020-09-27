@@ -21,10 +21,15 @@ export class RoomsController {
     @Get('/:roomId')
     async getRoom(@Res() res, @Req() req, @Param('roomId') roomId){
         try{
-            const room = await this.RoomService.findRoom(roomId);
+            const room = await this.RoomService.findRoom({_id: roomId});
+
+            if(!room){
+                throw new NotFoundException();
+            }
+
             res.json(room);
         }catch(e){
-            console.log(e);
+            console.log(e)
         }
     }
 
@@ -32,8 +37,15 @@ export class RoomsController {
     async addRoom(@Res() res, @Req() req, @Body() data){
         try{
             const { name, username } = data;
-            const room = await this.RoomService.addRoom({name, username});
-            res.json(room);
+            const room = await this.RoomService.findRoom({name});
+
+            if (room) throw new NotFoundException({
+                statusCode: 404,
+                error: "This name of room is used."
+            });
+
+            const newRoom = await this.RoomService.addRoom({name, username});
+            res.json(newRoom);
         }catch(e){
             console.log(e);
         }
@@ -44,7 +56,7 @@ export class RoomsController {
         try{
             const { name, username } = data;
 
-            const room = await this.RoomService.findOne({_id: roomId});
+            const room = await this.RoomService.findRoom({_id: roomId});
 
             if (!room) throw new NotFoundException({
                 statusCode: 404,
@@ -69,7 +81,7 @@ export class RoomsController {
         try{
             const { username } = data;
             
-            const room = await this.RoomService.findOne({_id: roomId});
+            const room = await this.RoomService.findRoom({_id: roomId});
 
             if (!room) throw new NotFoundException({
                 statusCode: 404,
@@ -88,7 +100,7 @@ export class RoomsController {
         try{
             const { roomId, username } = params;
             
-            const room = await this.RoomService.findOne({_id: roomId});
+            const room = await this.RoomService.findRoom({_id: roomId});
 
             if (!room) throw new NotFoundException({
                 statusCode: 404,
@@ -117,7 +129,7 @@ export class RoomsController {
         try{
             const { username } = data;
             
-            const room = await this.RoomService.findOne({_id: roomId});
+            const room = await this.RoomService.findRoom({_id: roomId});
 
             if (!room) throw new NotFoundException({
                 statusCode: 404,
@@ -139,7 +151,7 @@ export class RoomsController {
     @Delete('/:roomId/delete')
     async deleteRoom(@Res() res, @Req() req, @Param('roomId') roomId){
         try{
-            const room = await this.RoomService.findOne({_id: roomId});
+            const room = await this.RoomService.findRoom({_id: roomId});
 
             if (!room) throw new NotFoundException({
                 statusCode: 404,
