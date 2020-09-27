@@ -3,7 +3,6 @@ import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
 import { RoomModel } from './models/room.model';
-// import { ICreateRoom } from './interfaces/room.interface';
 
 @Injectable()
 export class RoomsService {
@@ -13,24 +12,39 @@ export class RoomsService {
         return this.roomModel.find().lean();
     }
 
-    async findRoom(roomId): Promise<RoomModel> {
-        return this.roomModel.find({_id: roomId}).lean();
+    async findRoom(query): Promise<RoomModel> {
+        return this.roomModel.findOne(query).lean();
+    }
+    // async findOne(query): Promise<RoomModel> {
+    //     return this.roomModel.findOne(query);
+    // }
+
+    async editUrl(roomId, newUrl): Promise<RoomModel> {
+        return this.roomModel.findOneAndUpdate(roomId, { url: newUrl }, {new: true});
+    }
+
+    async updatePlayerStatus(roomId, status): Promise<RoomModel> {
+        return this.roomModel.findOneAndUpdate(roomId, { status }, {new: true});
+    }
+
+    async updatePlayedTime(roomId, playedTime): Promise<RoomModel> {
+        return this.roomModel.findOneAndUpdate(roomId, { playedTime }, {new: true});
     }
 
     async addRoom(data): Promise<RoomModel> {
         return new this.roomModel({name: data.name, membersId: [data.username], owner: data.username}).save();
     }
 
-    async updateRoom(taskId, data): Promise<RoomModel> {
-        return this.roomModel.findByIdAndUpdate(taskId, {name: data}, {new: true});
+    async updateRoom(roomId, data): Promise<RoomModel> {
+        return this.roomModel.findByIdAndUpdate(roomId, {name: data}, {new: true});
     }
 
-    async joinRoom(taskId, data): Promise<RoomModel> {
-        return this.roomModel.findByIdAndUpdate(taskId, {$push: {membersId: data}}, {new: true});
+    async joinRoom(roomId, data): Promise<RoomModel> {
+        return this.roomModel.findByIdAndUpdate(roomId, {$push: {membersId: data}}, {new: true});
     }
 
-    async deleteRoom(taskId): Promise<RoomModel> {
-        return this.roomModel.findByIdAndRemove(taskId);
+    async deleteRoom(roomId): Promise<RoomModel> {
+        return this.roomModel.findByIdAndRemove(roomId);
     }
 
     async deleteFromRoom(roomId, username): Promise<RoomModel> {
@@ -39,9 +53,5 @@ export class RoomsService {
 
     async leaveFromRoom(roomId, username): Promise<RoomModel> {
         return this.roomModel.findByIdAndUpdate(roomId, {$pull: {membersId: username}}, {new: true});
-    }
-
-    async findOne(query): Promise<RoomModel> {
-        return this.roomModel.findOne(query);
     }
 }
