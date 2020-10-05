@@ -42,7 +42,6 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
 
   @SubscribeMessage('onPlayedTime')
   onPlayedTime(client: Socket, data): void {
-    console.log("backend = " + data.playedTime)
     this.RoomService.updatePlayedTime(data.roomId, data.playedTime);
     client.to(data.roomId)
       .emit('updatePlayedTime', data.playedTime);

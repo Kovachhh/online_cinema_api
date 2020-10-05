@@ -17,11 +17,11 @@ export class AuthService {
         return jwtPayload;
     }
 
-    async createToken(data: IUserPayload ): Promise<JWT> {
+    async createToken(user: IUserPayload ): Promise<JWT> {
         const expiresIn: string = process.env.EXPIRES_TOKEN;
-        const token: string = this.jwtService.sign(data, { expiresIn: `${expiresIn} days` });
+        const token: string = this.jwtService.sign(user, { expiresIn: `${expiresIn} days` });
 
-        const result: any = { expiredAt: moment().add(expiresIn, 'days').valueOf(), token };
+        const result: any = {user, expiredAt: moment().add(expiresIn, 'days').valueOf(), token };
         return result;
     }
 }

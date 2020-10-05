@@ -5,8 +5,8 @@ import { ADMIN_TYPE, MEMBER_TYPE } from '../../utils/enum.constants';
 export const UserSchema = new mongoose.Schema({
      email: { type: String, required: true, uniq: true },
      username: { type: String, required: true, uniq: true },
-     password: { type: String, required: true, },
-     type: { type: String, enum: [ ADMIN_TYPE, MEMBER_TYPE ] },
+     password: { type: String, required: true },
+     type: { type: String, enum: [ ADMIN_TYPE, MEMBER_TYPE ], required: true },
 });
 
 // UserSchema.pre('save', function(next){
