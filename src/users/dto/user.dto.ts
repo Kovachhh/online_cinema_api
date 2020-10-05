@@ -15,6 +15,9 @@ export class CreateUserDTO {
     @IsNotEmpty() 
     @IsEmail()  
         email: UserModel['password'];
+
+    @IsNotEmpty()  
+        type: UserModel['type'];
 }
 
 // export class UserDTO {  

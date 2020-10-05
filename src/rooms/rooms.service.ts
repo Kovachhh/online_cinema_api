@@ -15,20 +15,17 @@ export class RoomsService {
     async findRoom(query): Promise<RoomModel> {
         return this.roomModel.findOne(query).lean();
     }
-    // async findOne(query): Promise<RoomModel> {
-    //     return this.roomModel.findOne(query);
-    // }
 
     async editUrl(roomId, newUrl): Promise<RoomModel> {
-        return this.roomModel.findOneAndUpdate(roomId, { url: newUrl }, {new: true});
+        return this.roomModel.findByIdAndUpdate(roomId, { url: newUrl }, {new: true});
     }
 
     async updatePlayerStatus(roomId, status): Promise<RoomModel> {
-        return this.roomModel.findOneAndUpdate(roomId, { status }, {new: true});
+        return this.roomModel.findByIdAndUpdate(roomId, { status }, {new: true});
     }
 
     async updatePlayedTime(roomId, playedTime): Promise<RoomModel> {
-        return this.roomModel.findOneAndUpdate(roomId, { playedTime }, {new: true});
+        return this.roomModel.findByIdAndUpdate(roomId, { playedTime }, {new: true});
     }
 
     async addRoom(data): Promise<RoomModel> {

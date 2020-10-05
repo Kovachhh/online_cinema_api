@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post,Headers, Req, UseGuards, Res, NotFoundException } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 import { LoginUserDTO } from 'src/auth/dto/auth.dto';
-// import { AuthGuard } from '@nestjs/passport';
+import { MEMBER_TYPE } from 'src/utils/enum.constants';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { CreateUserDTO } from './dto/user.dto';
 import { UsersService } from './users.service';
@@ -17,7 +17,8 @@ export class UsersController {
 
     @Post() 
     async create(@Body() data: CreateUserDTO) {
-        return this.usersService.createUser(data);
+        const { username, email, password } = data;
+        return this.usersService.createUser({username, email, password, type: MEMBER_TYPE});
     }
 
     @Post('/login') 
