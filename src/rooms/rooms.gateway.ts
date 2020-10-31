@@ -24,6 +24,13 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
   @SubscribeMessage('onEnterRoom')
   onEnterRoom(client: Socket, roomId): void {
     client.join(roomId);
+    console.log('enter')
+  }
+
+  @SubscribeMessage('onLeaveRoom')
+  onLeaveRoom(client: Socket, roomId): void {
+    client.leave(roomId);
+    console.log('leave')
   }
 
   @SubscribeMessage('onEditUrl')
