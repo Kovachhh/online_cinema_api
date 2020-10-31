@@ -1,4 +1,7 @@
-import { Controller, Get, Res, Req, Post, Body, Patch, Delete, Param, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Res, Req, Post, Body, Patch, Delete, Param, NotFoundException, Inject, forwardRef, Header, UseGuards, ForbiddenException } from '@nestjs/common';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { InvitesService } from 'src/invites/invites.service';
+import { ADMIN_TYPE, MEMBER_TYPE } from 'src/utils/enum.constants';
 
 import { RoomsService } from './rooms.service';
 
@@ -6,55 +9,69 @@ import { RoomsService } from './rooms.service';
 export class RoomsController {
     constructor(
         private RoomService: RoomsService, 
+        @Inject(forwardRef(() => InvitesService)) private InviteService: InvitesService,
         ) { }
 
+    @UseGuards(AuthGuard([MEMBER_TYPE, ADMIN_TYPE]))
     @Get('')
     async getRooms(@Res() res, @Req() req){
         try{
-            const rooms = await this.RoomService.findAll();
+            const { userId } = req.user;
+            const rooms = await this.RoomService.findJoinedRooms(userId);
             res.json(rooms);
         }catch(e){
             console.log(e);
+            res.responseException({message: e.response, status: e.status});
         }
     }
 
+    @UseGuards(AuthGuard([MEMBER_TYPE, ADMIN_TYPE]))
     @Get('/:roomId')
     async getRoom(@Res() res, @Req() req, @Param('roomId') roomId){
         try{
+            const { userId } = req.user;
+
             const room = await this.RoomService.findRoom({_id: roomId});
 
-            if(!room){
-                throw new NotFoundException();
-            }
+            if(!room.membersId.includes(userId)) throw new ForbiddenException();
+
+            if(!room) throw new NotFoundException();
 
             res.json(room);
         }catch(e){
             console.log(e)
+            res.responseException({message: e.response, status: e.status});
         }
     }
 
+    @UseGuards(AuthGuard([MEMBER_TYPE, ADMIN_TYPE]))
     @Post('')
     async addRoom(@Res() res, @Req() req, @Body() data){
         try{
-            const { name, username } = data;
+            const { name } = data;
+            const { userId } = req.user;
             const room = await this.RoomService.findRoom({name});
 
             if (room) throw new NotFoundException({
                 statusCode: 404,
-                error: "This name of room is used."
+                error: "This name of room is exist."
             });
 
-            const newRoom = await this.RoomService.addRoom({name, username});
+            const newRoom = await this.RoomService.addRoom({name, userId});
+            await this.InviteService.addRoomInvite({roomId: newRoom._id});
             res.json(newRoom);
         }catch(e){
             console.log(e);
+            res.responseException({message: e.response, status: e.status});
         }
     }
     
+    @UseGuards(AuthGuard([MEMBER_TYPE, ADMIN_TYPE]))
     @Patch('/:roomId/edit')
     async updateRoom(@Res() res, @Req() req, @Param('roomId') roomId, @Body() data){
         try{
-            const { name, username } = data;
+            const { name } = data;
+            const { userId } = req.user;
 
             const room = await this.RoomService.findRoom({_id: roomId});
 
@@ -63,71 +80,92 @@ export class RoomsController {
                 error: "A room with this id not found."
             });
 
-            
-            if (!room.owner == username) throw new NotFoundException({
+            if (!room.owner == userId) throw new NotFoundException({
                 statusCode: 404,
                 error: "You are not owner of this room."
             });
 
-            const updatedRoom = await this.RoomService.updateRoom(roomId, name);
-            res.json(updatedRoom);
+            const updatedRoom = await this.RoomService.updateRoom(roomId, {name});
+            res.json(updatedRoom.name);
         }catch(e){
             console.log(e);
+            res.responseException({message: e.response, status: e.status});
         }
     }
 
-    @Patch('/:roomId/join')
-    async joinRoom(@Res() res, @Req() req, @Param('roomId') roomId, @Body() data){
+    @UseGuards(AuthGuard([MEMBER_TYPE, ADMIN_TYPE]))    
+    @Patch('/join')
+    async joinRoom(@Res() res, @Req() req, @Body() data){
         try{
-            const { username } = data;
+            const { invite } = data;
+            const { userId } = req.user;
+
+            const inviteRoom = await this.InviteService.findInvite({code: invite});
+
+            if(!inviteRoom || !inviteRoom.status){
+                throw new NotFoundException({
+                    statusCode: 404,
+                    error: "This invite code is incorrect."
+                });
+            }
             
-            const room = await this.RoomService.findRoom({_id: roomId});
+            const room = await this.RoomService.findRoom({_id: inviteRoom.roomId});
 
             if (!room) throw new NotFoundException({
                 statusCode: 404,
                 error: "A room with this id not found."
             });
 
-            const updatedRoom = await this.RoomService.joinRoom(roomId, username);
+            if (room.membersId.includes(userId)) throw new NotFoundException({
+                statusCode: 404,
+                error: "You are already in this room."
+            });
+
+            const updatedRoom = await this.RoomService.joinRoom(inviteRoom.roomId, userId);
             res.json(updatedRoom);
         }catch(e){
             console.log(e);
+            res.responseException({message: e.response, status: e.status});
         }
     }
 
-    @Patch('/:roomId/removeMember/:username')
-    async removeMemberFromRoom(@Res() res, @Req() req, @Param() params){
-        try{
-            const { roomId, username } = params;
+    // @UseGuards(AuthGuard([MEMBER_TYPE, ADMIN_TYPE]))
+    // @Patch('/:roomId/removeMember/:userId')
+    // async removeMemberFromRoom(@Res() res, @Req() req, @Param() params){
+    //     try{
+    //         const { roomId } = params;
+    //         const { userId } = req.user;
             
-            const room = await this.RoomService.findRoom({_id: roomId});
+    //         const room = await this.RoomService.findRoom({_id: roomId});
 
-            if (!room) throw new NotFoundException({
-                statusCode: 404,
-                error: "A room with this id not found."
-            });
+    //         if (!room) throw new NotFoundException({
+    //             statusCode: 404,
+    //             error: "A room with this id not found."
+    //         });
 
-            if (!room.owner == username) throw new NotFoundException({
-                statusCode: 404,
-                error: "You are not owner of this room."
-            });
+    //         if (!room.owner == userId) throw new NotFoundException({
+    //             statusCode: 404,
+    //             error: "You are not owner of this room."
+    //         });
 
-            if (!room.membersId.includes(username)) throw new NotFoundException({
-                statusCode: 404,
-                error: "The user with this id does not exist in this room."
-            });
+    //         if (!room.membersId.includes(userId)) throw new NotFoundException({
+    //             statusCode: 404,
+    //             error: "The user with this id does not exist in this room."
+    //         });
 
-            const updatedRoom = await this.RoomService.deleteFromRoom(roomId, username);
-            res.json(updatedRoom);
-        }catch(e){
-            console.log(e);
-        }
-    }
+    //         const updatedRoom = await this.RoomService.deleteFromRoom(roomId, userId);
+    //         res.json(updatedRoom);
+    //     }catch(e){
+    //         console.log(e);
+    //         res.responseException({message: e.response, status: e.status});
+    //     }
+    // }
 
+    @UseGuards(AuthGuard([MEMBER_TYPE, ADMIN_TYPE]))
     @Patch('/:roomId/leave')
-    async leaveFromRoom(@Res() res, @Req() req, @Param('roomId') roomId, @Body() data){
+    async leaveFromRoom(@Res() res, @Req() req, @Param('roomId') roomId){
         try{
-            const { username } = data;
+            const { userId } = req.user;
             
             const room = await this.RoomService.findRoom({_id: roomId});
 
@@ -135,22 +173,30 @@ export class RoomsController {
                 statusCode: 404,
                 error: "A room with this id not found."
             });
-
-            if (!room.membersId.includes(username)) throw new NotFoundException({
+            
+            if (!room.membersId.includes(userId)) throw new NotFoundException({
                 statusCode: 404,
                 error: "You are not in this room."
             });
 
-            const updatedRoom = await this.RoomService.leaveFromRoom(roomId, username);
+            if (room.owner === userId) throw new NotFoundException({
+                statusCode: 404,
+                error: "You are owner of this room."
+            });
+
+            const updatedRoom = await this.RoomService.leaveFromRoom(roomId, userId);
             res.json(updatedRoom);
         }catch(e){
             console.log(e);
+            res.responseException({message: e.response, status: e.status});
         }
     }
 
+    @UseGuards(AuthGuard([MEMBER_TYPE, ADMIN_TYPE]))
     @Delete('/:roomId/delete')
     async deleteRoom(@Res() res, @Req() req, @Param('roomId') roomId){
         try{
+            const { userId } = req.user;
             const room = await this.RoomService.findRoom({_id: roomId});
 
             if (!room) throw new NotFoundException({
@@ -158,10 +204,16 @@ export class RoomsController {
                 error: "A room with this id not found."
             });
 
+            if (!room.owner == userId) throw new NotFoundException({
+                statusCode: 404,
+                error: "You are not owner of this room."
+            });
+            await this.InviteService.deleteInvite({roomId: room._id})
             const deletedRoom = await this.RoomService.deleteRoom(roomId);
             res.json(deletedRoom);
         }catch(e){
             console.log(e);
+            res.responseException({message: e.response, status: e.status});
         }
     }
 

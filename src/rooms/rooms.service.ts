@@ -29,26 +29,34 @@ export class RoomsService {
     }
 
     async addRoom(data): Promise<RoomModel> {
-        return new this.roomModel({name: data.name, membersId: [data.username], owner: data.username}).save();
+        return new this.roomModel({name: data.name, membersId: [data.userId], owner: data.userId}).save();
     }
 
     async updateRoom(roomId, data): Promise<RoomModel> {
-        return this.roomModel.findByIdAndUpdate(roomId, {name: data}, {new: true});
+        return this.roomModel.findByIdAndUpdate(roomId, data, {new: true});
     }
 
     async joinRoom(roomId, data): Promise<RoomModel> {
         return this.roomModel.findByIdAndUpdate(roomId, {$push: {membersId: data}}, {new: true});
     }
 
+    async findJoinedRoom(roomId, userId): Promise<RoomModel> {
+        return this.roomModel.findOne(roomId, {membersId : {$in : [userId]}}).lean();
+    }
+
+    async findJoinedRooms(userId): Promise<RoomModel[]> {
+        return this.roomModel.find({membersId : {$in : [userId]}}).lean();
+    }
+
     async deleteRoom(roomId): Promise<RoomModel> {
         return this.roomModel.findByIdAndRemove(roomId);
     }
 
-    async deleteFromRoom(roomId, username): Promise<RoomModel> {
-        return this.roomModel.findByIdAndUpdate(roomId, {$pull: {membersId: username}}, {new: true});
-    }
+    // async deleteFromRoom(roomId, username): Promise<RoomModel> {
+    //     return this.roomModel.findByIdAndUpdate(roomId, {$pull: {membersId: username}}, {new: true});
+    // }
 
-    async leaveFromRoom(roomId, username): Promise<RoomModel> {
-        return this.roomModel.findByIdAndUpdate(roomId, {$pull: {membersId: username}}, {new: true});
+    async leaveFromRoom(roomId, userId): Promise<RoomModel> {
+        return this.roomModel.findByIdAndUpdate(roomId, {$pull: {membersId: userId}}, {new: true});
     }
 }
