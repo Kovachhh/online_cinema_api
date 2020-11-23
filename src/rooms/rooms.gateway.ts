@@ -8,8 +8,8 @@ import {
  } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
-import { RoomsService } from './rooms.service';
 
+import { RoomsService } from './rooms.service';
 
 @WebSocketGateway()
 export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
@@ -18,13 +18,22 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
     private RoomService: RoomsService, 
     ) { }
 
-  @WebSocketServer() server: Server;
+  @WebSocketServer() 
+  server: Server;
+ 
   private logger: Logger = new Logger('RoomGateway');
 
   @SubscribeMessage('onEnterRoom')
   onEnterRoom(client: Socket, roomId): void {
     client.join(roomId);
-    console.log('enter')
+    console.log('enter');
+  }
+
+  @SubscribeMessage('msgToServer')
+  handleMessage(client: Socket, data): void {
+    console.log('socket')
+    client.broadcast.to(data.roomId)
+    .emit('msgToClient', {_id: data._id, username: data.username, text: data.text});
   }
 
   @SubscribeMessage('onLeaveRoom')

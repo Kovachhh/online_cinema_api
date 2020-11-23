@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { InvitesModule } from './invites/invites.module';
 import { ResponseMiddleware } from './utils/response.middleware';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
   imports: [
@@ -14,7 +15,8 @@ import { ResponseMiddleware } from './utils/response.middleware';
     RoomsModule,
     AuthModule,
     UsersModule,
-    InvitesModule
+    InvitesModule,
+    MessagesModule
   ],
   controllers: [AppController],
   providers: [AppService]
