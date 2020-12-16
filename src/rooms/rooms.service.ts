@@ -8,9 +8,9 @@ import { RoomModel } from './models/room.model';
 export class RoomsService {
     constructor(@InjectModel('Room') private readonly roomModel: Model<RoomModel>) { }
 
-    async findAll(): Promise<RoomModel[]> {
-        return this.roomModel.find().lean();
-    }
+    // async findAll(): Promise<RoomModel[]> {
+    //     return this.roomModel.find().lean();
+    // }
 
     async findRoom(query): Promise<RoomModel> {
         return this.roomModel.findOne(query).lean();
@@ -38,10 +38,6 @@ export class RoomsService {
 
     async joinRoom(roomId, data): Promise<RoomModel> {
         return this.roomModel.findByIdAndUpdate(roomId, {$push: {membersId: data}}, {new: true});
-    }
-
-    async findJoinedRoom(roomId, userId): Promise<RoomModel> {
-        return this.roomModel.findOne(roomId, {membersId : {$in : [userId]}}).lean();
     }
 
     async findJoinedRooms(userId): Promise<RoomModel[]> {

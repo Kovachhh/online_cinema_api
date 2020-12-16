@@ -7,11 +7,7 @@ import { MessageModel } from './models/message.model';
 export class MessagesService {
     constructor(@InjectModel('Message') private readonly messageModel: Model<MessageModel>) { }
 
-    async findAll(): Promise<MessageModel[]> {
-        return this.messageModel.find().lean();
-    }
-
-    async findAllInRoom(query): Promise<MessageModel[]> {
+    async findRoomMessages(query): Promise<MessageModel[]> {
         return this.messageModel.find(query).lean();
     }
 

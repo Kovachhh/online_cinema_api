@@ -22,8 +22,8 @@ export class UsersService {
       return this.userModel.findOne({ username: data.username, password: data.password }).lean();
     }
 
-    async createUser(createUserDto: CreateUserDTO) {
-      const createdUser = new this.userModel(createUserDto);
+    async createUser(data: CreateUserDTO) {
+      const createdUser = new this.userModel(data);
       return createdUser.save();
     }
 

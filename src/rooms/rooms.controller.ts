@@ -32,10 +32,10 @@ export class RoomsController {
             const { userId } = req.user;
 
             const room = await this.RoomService.findRoom({_id: roomId});
-
-            if(!room.membersId.includes(userId)) throw new ForbiddenException();
-
+            
             if(!room) throw new NotFoundException();
+            
+            if(!room.membersId.includes(userId)) throw new ForbiddenException();
 
             res.json(room);
         }catch(e){

@@ -9,19 +9,8 @@ export class MessagesController {
     constructor(
         private MessageService: MessagesService,
         @Inject(forwardRef(() => RoomsService)) private RoomService: RoomsService,
-    ) {}
+    ) {}    
 
-    @UseGuards(AuthGuard([MEMBER_TYPE, ADMIN_TYPE]))
-    @Get('')
-    async getMessages(@Res() res, @Req() req){
-        try{
-            const messages = await this.MessageService.findAll();
-            res.json(messages);
-        }catch(e){
-            console.log(e);
-            res.responseException({message: e.response, status: e.status});
-        }
-    }
     @UseGuards(AuthGuard([MEMBER_TYPE, ADMIN_TYPE]))
     @Get('/room/:roomId')
     async getRoomMessages(@Res() res, @Req() req, @Param('roomId') roomId){
@@ -36,7 +25,7 @@ export class MessagesController {
 
             if(!room.membersId.includes(userId)) throw new ForbiddenException();
 
-            const messages = await this.MessageService.findAllInRoom({roomId});
+            const messages = await this.MessageService.findRoomMessages({roomId});
             res.json(messages);
         }catch(e){
             console.log(e);
