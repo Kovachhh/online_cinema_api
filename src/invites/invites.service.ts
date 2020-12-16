@@ -8,9 +8,9 @@ import { InviteModel } from './models/invite.model';
 export class InvitesService {
     constructor(@InjectModel('Invite') private readonly inviteModel: Model<InviteModel>) { }
 
-    async findAll(): Promise<InviteModel[]> {
-        return this.inviteModel.find().lean();
-    }
+    // async findAll(): Promise<InviteModel[]> {
+    //     return this.inviteModel.find().lean();
+    // }
 
     async findInvite(query): Promise<InviteModel> {
         return this.inviteModel.findOne(query).lean();

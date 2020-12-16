@@ -5,7 +5,7 @@ import {
   WebSocketServer,
   OnGatewayConnection,
   OnGatewayDisconnect,
- } from '@nestjs/websockets';
+} from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
 
@@ -15,12 +15,12 @@ import { RoomsService } from './rooms.service';
 export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(
-    private RoomService: RoomsService, 
-    ) { }
+    private RoomService: RoomsService,
+  ) { }
 
-  @WebSocketServer() 
+  @WebSocketServer()
   server: Server;
- 
+
   private logger: Logger = new Logger('RoomGateway');
 
   @SubscribeMessage('onEnterRoom')
@@ -31,9 +31,9 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
 
   @SubscribeMessage('msgToServer')
   handleMessage(client: Socket, data): void {
-    console.log('socket')
+    console.log('socket');
     client.broadcast.to(data.roomId)
-    .emit('msgToClient', {_id: data._id, username: data.username, text: data.text});
+      .emit('msgToClient', { _id: data._id, username: data.username, text: data.text });
   }
 
   @SubscribeMessage('onLeaveRoom')
@@ -61,17 +61,17 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
     this.RoomService.updatePlayedTime(data.roomId, data.playedTime);
     client.to(data.roomId)
       .emit('updatePlayedTime', data.playedTime);
-  } 
- 
+  }
+
   afterInit(server: Server) {
     this.logger.log('Init');
-   }
+  }
 
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
-   }
-  
-   handleConnection(client: Socket, ...args: any[]) {
+  }
+
+  handleConnection(client: Socket, ...args: any[]) {
     this.logger.log(`Client connected: ${client.id}`);
-   }
+  }
 }
